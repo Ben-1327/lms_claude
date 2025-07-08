@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+      - postgres
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run dev
+
+  backend:
+    build: ./backend
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/lms_db
+      - JWT_SECRET=your-secret-key
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: npm run start:dev
+
+  postgres:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=lms_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
