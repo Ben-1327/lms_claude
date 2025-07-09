@@ -42,13 +42,20 @@ export interface Course {
 export interface Curriculum {
   id: string
   courseId: string
-  parentId?: string
   title: string
-  contentType: 'text' | 'pdf' | 'slide' | 'video' | 'quiz' | 'assignment'
+  description?: string
+  chapters: Chapter[]
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface Chapter {
+  id: string
+  curriculumId: string
+  title: string
+  contentType: 'text' | 'pdf' | 'slide' | 'video' | 'quiz'
   content: string
   orderIndex: number
-  children?: Curriculum[]
-  assignments?: Assignment[]
   prerequisites?: string[]
   estimatedDuration?: number
   difficulty?: 'beginner' | 'intermediate' | 'advanced'
@@ -65,29 +72,25 @@ export interface Enrollment {
   progress: number
 }
 
-export interface CurriculumEnrollment {
+export interface ChapterProgress {
   id: string
   userId: string
-  curriculumId: string
-  enrollmentId: string
-  status: 'active' | 'completed' | 'dropped'
-  startDate: Date
-  endDate?: Date
-  progress: number
-  assignedBy?: string
-  assignedAt: Date
+  chapterId: string
+  completed: boolean
+  completedAt?: Date
+  timeSpent?: number
 }
 
 export interface Progress {
   userId: string
-  curriculumId: string
+  chapterId: string
   completed: boolean
   completedAt?: Date
 }
 
 export interface Assignment {
   id: string
-  curriculumIds: string[]
+  courseId: string
   title: string
   description: string
   dueDate?: Date

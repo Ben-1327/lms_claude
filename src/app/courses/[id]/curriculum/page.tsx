@@ -42,8 +42,12 @@ export default function CurriculumManagePage({ params }: CurriculumManagePagePro
   }, [isAuthenticated, isLoading, user, router])
 
   useEffect(() => {
-    const courseCurricula = mockCurricula.filter(c => c.courseId === params.id)
-    setCurricula(courseCurricula.sort((a, b) => a.orderIndex - b.orderIndex))
+    const courseCurriculum = mockCurricula.find(c => c.courseId === params.id)
+    if (courseCurriculum) {
+      setCurricula(courseCurriculum.chapters.sort((a, b) => a.orderIndex - b.orderIndex))
+    } else {
+      setCurricula([])
+    }
   }, [params.id])
 
   if (isLoading) {
@@ -80,15 +84,15 @@ export default function CurriculumManagePage({ params }: CurriculumManagePagePro
     )
   }
 
-  const handleEdit = (curriculum: any) => {
-    setIsEditing(curriculum.id)
+  const handleEdit = (chapter: any) => {
+    setIsEditing(chapter.id)
     setEditForm({
-      title: curriculum.title,
-      contentType: curriculum.contentType,
-      content: curriculum.content,
-      estimatedDuration: curriculum.estimatedDuration || 0,
-      difficulty: curriculum.difficulty || 'beginner',
-      objectives: curriculum.objectives || []
+      title: chapter.title,
+      contentType: chapter.contentType,
+      content: chapter.content,
+      estimatedDuration: chapter.estimatedDuration || 0,
+      difficulty: chapter.difficulty || 'beginner',
+      objectives: chapter.objectives || []
     })
   }
 
@@ -151,19 +155,19 @@ export default function CurriculumManagePage({ params }: CurriculumManagePagePro
     console.log('Reordering curricula by drag:', updatedCurricula.map(c => ({ id: c.id, orderIndex: c.orderIndex })))
   }
 
-  const handleDuplicate = (curriculum: any) => {
-    const newCurriculum = {
-      ...curriculum,
+  const handleDuplicate = (chapter: any) => {
+    const newChapter = {
+      ...chapter,
       id: Date.now().toString(),
-      title: `${curriculum.title} (コピー)`,
+      title: `${chapter.title} (コピー)`,
       orderIndex: curricula.length + 1
     }
-    setCurricula(prev => [...prev, newCurriculum])
-    console.log('Duplicating curriculum:', newCurriculum)
+    setCurricula(prev => [...prev, newChapter])
+    console.log('Duplicating chapter:', newChapter)
   }
 
-  const handlePreview = (curriculum: any) => {
-    console.log('Previewing curriculum:', curriculum)
+  const handlePreview = (chapter: any) => {
+    console.log('Previewing chapter:', chapter)
   }
 
   const handleCreate = async () => {
@@ -259,7 +263,7 @@ export default function CurriculumManagePage({ params }: CurriculumManagePagePro
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                新規カリキュラム
+                新規章を追加
               </button>
             </div>
           </div>
@@ -365,8 +369,8 @@ export default function CurriculumManagePage({ params }: CurriculumManagePagePro
               <Droppable droppableId="curricula">
                 {(provided) => (
                   <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
-                    {curricula.map((curriculum, index) => (
-                      <Draggable key={curriculum.id} draggableId={curriculum.id} index={index}>
+                    {curricula.map((chapter, index) => (
+                      <Draggable key={chapter.id} draggableId={chapter.id} index={index}>
                         {(provided, snapshot) => (
                           <div
                             ref={provided.innerRef}
@@ -387,7 +391,7 @@ export default function CurriculumManagePage({ params }: CurriculumManagePagePro
                                   <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
                                     {index + 1}.
                                   </span>
-                                  {isEditing === curriculum.id ? (
+                                  {isEditing === chapter.id ? (
                                     <input
                                       type="text"
                                       value={editForm.title}
@@ -396,45 +400,45 @@ export default function CurriculumManagePage({ params }: CurriculumManagePagePro
                                     />
                                   ) : (
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                      {curriculum.title}
+                                      {chapter.title}
                                     </h3>
                                   )}
                                   <div className="flex space-x-2">
                                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-                                      <span className="mr-1">{getContentTypeIcon(curriculum.contentType)}</span>
-                                      {getContentTypeLabel(curriculum.contentType)}
+                                      <span className="mr-1">{getContentTypeIcon(chapter.contentType)}</span>
+                                      {getContentTypeLabel(chapter.contentType)}
                                     </span>
-                                    {curriculum.difficulty && (
-                                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getDifficultyColor(curriculum.difficulty)}`}>
-                                        {curriculum.difficulty === 'beginner' ? '初級' : 
-                                         curriculum.difficulty === 'intermediate' ? '中級' : '上級'}
+                                    {chapter.difficulty && (
+                                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getDifficultyColor(chapter.difficulty)}`}>
+                                        {chapter.difficulty === 'beginner' ? '初級' : 
+                                         chapter.difficulty === 'intermediate' ? '中級' : '上級'}
                                       </span>
                                     )}
-                                    {curriculum.estimatedDuration && (
+                                    {chapter.estimatedDuration && (
                                       <span className="text-xs text-gray-500 dark:text-gray-400">
-                                        {curriculum.estimatedDuration}分
+                                        {chapter.estimatedDuration}分
                                       </span>
                                     )}
                                   </div>
                                 </div>
                                 <div className="flex items-center space-x-2">
                                   <button
-                                    onClick={() => handlePreview(curriculum)}
+                                    onClick={() => handlePreview(chapter)}
                                     className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                                     title="プレビュー"
                                   >
                                     <Eye className="h-4 w-4" />
                                   </button>
                                   <button
-                                    onClick={() => handleDuplicate(curriculum)}
+                                    onClick={() => handleDuplicate(chapter)}
                                     className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                                     title="複製"
                                   >
                                     <Copy className="h-4 w-4" />
                                   </button>
-                                  {isEditing === curriculum.id ? (
+                                  {isEditing === chapter.id ? (
                                     <button
-                                      onClick={() => handleSave(curriculum.id)}
+                                      onClick={() => handleSave(chapter.id)}
                                       disabled={isSaving}
                                       className="p-1 text-green-600 hover:text-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                       title="保存"
@@ -443,7 +447,7 @@ export default function CurriculumManagePage({ params }: CurriculumManagePagePro
                                     </button>
                                   ) : (
                                     <button
-                                      onClick={() => handleEdit(curriculum)}
+                                      onClick={() => handleEdit(chapter)}
                                       className="p-1 text-blue-600 hover:text-blue-700"
                                       title="編集"
                                     >
@@ -451,7 +455,7 @@ export default function CurriculumManagePage({ params }: CurriculumManagePagePro
                                     </button>
                                   )}
                                   <button
-                                    onClick={() => handleDelete(curriculum.id)}
+                                    onClick={() => handleDelete(chapter.id)}
                                     className="p-1 text-red-600 hover:text-red-700"
                                     title="削除"
                                   >
@@ -461,7 +465,7 @@ export default function CurriculumManagePage({ params }: CurriculumManagePagePro
                               </div>
                             </div>
                             <div className="px-6 py-4">
-                              {isEditing === curriculum.id ? (
+                              {isEditing === chapter.id ? (
                                 <div className="space-y-4">
                                   <div className="grid grid-cols-2 gap-4">
                                     <div>
@@ -526,7 +530,7 @@ export default function CurriculumManagePage({ params }: CurriculumManagePagePro
                                       キャンセル
                                     </button>
                                     <button
-                                      onClick={() => handleSave(curriculum.id)}
+                                      onClick={() => handleSave(chapter.id)}
                                       disabled={isSaving}
                                       className="px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
@@ -537,7 +541,7 @@ export default function CurriculumManagePage({ params }: CurriculumManagePagePro
                               ) : (
                                 <div className="prose max-w-none">
                                   <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300">
-                                    {curriculum.content}
+                                    {chapter.content}
                                   </pre>
                                 </div>
                               )}

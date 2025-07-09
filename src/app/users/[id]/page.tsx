@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Layout from '@/components/Layout'
 import { mockUsers } from '@/lib/auth'
-import { mockEnrollments, mockProgress, mockCurricula, mockCurriculumEnrollments, mockCourses } from '@/lib/mockData'
+import { mockEnrollments, mockProgress, mockCurricula, mockCourses, mockChapterProgress } from '@/lib/mockData'
 import { User } from '@/types'
 import { 
   ArrowLeft, 
@@ -31,8 +31,8 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [targetUser, setTargetUser] = useState<User | null>(null)
   const [isEditing, setIsEditing] = useState(false)
-  const [showCurriculumModal, setShowCurriculumModal] = useState(false)
-  const [selectedCurricula, setSelectedCurricula] = useState<string[]>([])
+  const [showCourseModal, setShowCourseModal] = useState(false)
+  const [selectedCourses, setSelectedCourses] = useState<string[]>([])
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -107,10 +107,10 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
   const completedCount = userProgress.filter(p => p.completed).length
   const totalCount = userProgress.length
   
-  // カリキュラム割り当て関連
-  const userCurriculumEnrollments = mockCurriculumEnrollments.filter(ce => ce.userId === targetUser.id)
-  const assignedCurriculumIds = userCurriculumEnrollments.map(ce => ce.curriculumId)
-  const availableCurricula = mockCurricula.filter(c => !assignedCurriculumIds.includes(c.id))
+  // コース関連
+  const userChapterProgress = mockChapterProgress.filter(cp => cp.userId === targetUser.id)
+  const enrolledCourseIds = userEnrollments.map(e => e.courseId)
+  const availableCourses = mockCourses.filter(c => !enrolledCourseIds.includes(c.id))
 
   const handleSave = () => {
     // Here you would typically save to an API
@@ -150,21 +150,21 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
     }
   }
 
-  const handleAssignCurricula = async () => {
-    if (selectedCurricula.length === 0) {
-      alert('割り当てるカリキュラムを選択してください')
+  const handleAssignCourse = async () => {
+    if (selectedCourses.length === 0) {
+      alert('割り当てるコースを選択してください')
       return
     }
 
-    console.log('Assigning curricula:', selectedCurricula, 'to user:', targetUser.id)
+    console.log('Assigning courses:', selectedCourses, 'to user:', targetUser.id)
     // ここで実際のAPIコールを行う
-    setShowCurriculumModal(false)
-    setSelectedCurricula([])
+    setShowCourseModal(false)
+    setSelectedCourses([])
   }
 
-  const handleRemoveCurriculum = async (curriculumId: string) => {
-    if (confirm('このカリキュラムの割り当てを解除しますか？')) {
-      console.log('Removing curriculum:', curriculumId, 'from user:', targetUser.id)
+  const handleRemoveCourse = async (courseId: string) => {
+    if (confirm('このコースの割り当てを解除しますか？')) {
+      console.log('Removing course:', courseId, 'from user:', targetUser.id)
       // ここで実際のAPIコールを行う
     }
   }
@@ -385,18 +385,18 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
               <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
                 <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-600">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">カリキュラム割り当て</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">コース割り当て</h2>
                     <button
-                      onClick={() => setShowCurriculumModal(true)}
+                      onClick={() => setShowCourseModal(true)}
                       className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
                     >
                       <Plus className="h-4 w-4 mr-2" />
-                      カリキュラム追加
+                      コース追加
                     </button>
                   </div>
                 </div>
                 <div className="p-6">
-                  {userCurriculumEnrollments.length === 0 ? (
+                  {userEnrollments.length === 0 ? (
                     <div className="text-center py-8">
                       <BookmarkPlus className="mx-auto h-12 w-12 text-gray-400" />
                       <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">カリキュラムが割り当てられていません</h3>
@@ -404,14 +404,14 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {userCurriculumEnrollments.map((enrollment) => {
-                        const curriculum = mockCurricula.find(c => c.id === enrollment.curriculumId)
-                        if (!curriculum) return null
+                      {userEnrollments.map((enrollment) => {
+                        const course = mockCourses.find(c => c.id === enrollment.courseId)
+                        if (!course) return null
                         
                         return (
                           <div key={enrollment.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                             <div className="flex-1">
-                              <h4 className="text-sm font-medium text-gray-900 dark:text-white">{curriculum.title}</h4>
+                              <h4 className="text-sm font-medium text-gray-900 dark:text-white">{course.title}</h4>
                               <div className="mt-1 flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
                                 <span>進捗: {enrollment.progress}%</span>
                                 <span>状態: {enrollment.status === 'active' ? 'アクティブ' : enrollment.status === 'completed' ? '完了' : '中断'}</span>
@@ -429,7 +429,7 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
                                 ></div>
                               </div>
                               <button
-                                onClick={() => handleRemoveCurriculum(curriculum.id)}
+                                onClick={() => handleRemoveCourse(course.id)}
                                 className="p-1 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -507,43 +507,43 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
         </div>
       </div>
 
-      {/* Curriculum Assignment Modal */}
-      {showCurriculumModal && (
+      {/* Course Assignment Modal */}
+      {showCourseModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              カリキュラムを割り当て
+              コースを割り当て
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-              {targetUser.name}さんに割り当てるカリキュラムを選択してください
+              {targetUser.name}さんに割り当てるコースを選択してください
             </p>
             
-            {availableCurricula.length === 0 ? (
+            {availableCourses.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  割り当て可能なカリキュラムがありません
+                  割り当て可能なコースがありません
                 </p>
               </div>
             ) : (
               <div className="space-y-3 mb-6">
-                {availableCurricula.map((curriculum) => (
-                  <label key={curriculum.id} className="flex items-center p-3 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+                {availableCourses.map((course) => (
+                  <label key={course.id} className="flex items-center p-3 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={selectedCurricula.includes(curriculum.id)}
+                      checked={selectedCourses.includes(course.id)}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setSelectedCurricula(prev => [...prev, curriculum.id])
+                          setSelectedCourses(prev => [...prev, course.id])
                         } else {
-                          setSelectedCurricula(prev => prev.filter(id => id !== curriculum.id))
+                          setSelectedCourses(prev => prev.filter(id => id !== course.id))
                         }
                       }}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
                     />
                     <div className="ml-3 flex-1">
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-white">{curriculum.title}</h4>
+                      <h4 className="text-sm font-medium text-gray-900 dark:text-white">{course.title}</h4>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        コース: {mockCourses.find(c => c.id === curriculum.courseId)?.title || 'Unknown'}
+                        {course.description}
                       </p>
                     </div>
                   </label>
@@ -554,19 +554,19 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => {
-                  setShowCurriculumModal(false)
-                  setSelectedCurricula([])
+                  setShowCourseModal(false)
+                  setSelectedCourses([])
                 }}
                 className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
               >
                 キャンセル
               </button>
               <button
-                onClick={handleAssignCurricula}
-                disabled={selectedCurricula.length === 0}
+                onClick={handleAssignCourse}
+                disabled={selectedCourses.length === 0}
                 className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                割り当て ({selectedCurricula.length})
+                割り当て ({selectedCourses.length})
               </button>
             </div>
           </div>

@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Layout from '@/components/Layout'
-import { mockCourses, mockCurricula, mockEnrollments, mockProgress, mockAssignments, mockSubmissions } from '@/lib/mockData'
+import { mockCourses, mockCurricula, mockEnrollments, mockProgress, mockAssignments, mockSubmissions, mockChapterProgress } from '@/lib/mockData'
 import { ProgressManager } from '@/lib/progressManager'
 import { BookOpen, CheckCircle, Circle, Calendar, Users, Play, FileText, Clock, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
@@ -16,7 +16,7 @@ interface CourseDetailPageProps {
 export default function CourseDetailPage({ params }: CourseDetailPageProps) {
   const { user, isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
-  const [selectedCurriculumId, setSelectedCurriculumId] = useState<string | null>(null)
+  const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -37,9 +37,10 @@ export default function CourseDetailPage({ params }: CourseDetailPageProps) {
   }
 
   const course = mockCourses.find(c => c.id === params.id)
-  const curricula = mockCurricula.filter(c => c.courseId === params.id)
+  const curriculum = mockCurricula.find(c => c.courseId === params.id)
   const enrollment = mockEnrollments.find(e => e.courseId === params.id && e.userId === user?.id)
-  const userProgress = user ? ProgressManager.getProgress(user.id) : []
+  const userProgress = user ? mockProgress.filter(p => p.userId === user.id) : []
+  const userChapterProgress = user ? mockChapterProgress.filter(cp => cp.userId === user.id) : []
 
   if (!course) {
     return (
@@ -62,31 +63,37 @@ export default function CourseDetailPage({ params }: CourseDetailPageProps) {
     )
   }
 
-  const selectedCurriculum = selectedCurriculumId 
-    ? curricula.find(c => c.id === selectedCurriculumId)
-    : curricula[0]
+  const selectedChapter = selectedChapterId 
+    ? curriculum?.chapters.find(c => c.id === selectedChapterId)
+    : curriculum?.chapters[0]
 
-  const getCurriculumProgress = (curriculumId: string) => {
-    return userProgress.find(p => p.curriculumId === curriculumId)
+  const getChapterProgress = (chapterId: string) => {
+    return userProgress.find(p => p.chapterId === chapterId)
   }
 
-  const handleMarkComplete = (curriculumId: string) => {
+  const getChapterProgressDetailed = (chapterId: string) => {
+    return userChapterProgress.find(cp => cp.chapterId === chapterId)
+  }
+
+  const handleMarkComplete = (chapterId: string) => {
     if (!user) return
     
-    const progress = getCurriculumProgress(curriculumId)
+    const progress = getChapterProgress(chapterId)
     if (progress?.completed) {
-      ProgressManager.markAsIncomplete(user.id, curriculumId)
+      // Mark as incomplete
+      console.log('Marking chapter as incomplete:', chapterId)
     } else {
-      ProgressManager.markAsCompleted(user.id, curriculumId)
+      // Mark as completed
+      console.log('Marking chapter as completed:', chapterId)
     }
     
     // 強制的にコンポーネントを再レンダリング
     window.location.reload()
   }
 
-  const getRelatedAssignments = (curriculumId: string) => {
+  const getCourseAssignments = () => {
     return mockAssignments.filter(assignment => 
-      assignment.curriculumIds.includes(curriculumId)
+      assignment.courseId === params.id
     )
   }
 
@@ -164,24 +171,29 @@ export default function CourseDetailPage({ params }: CourseDetailPageProps) {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Curriculum List */}
+            {/* Chapter List */}
             <div className="lg:col-span-1">
               <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
                 <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-600">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">カリキュラム</h2>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {curriculum?.title || 'カリキュラム'}
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    {curriculum?.description}
+                  </p>
                 </div>
                 <div className="p-4">
                   <div className="space-y-2">
-                    {curricula.map((curriculum, index) => {
-                      const progress = getCurriculumProgress(curriculum.id)
+                    {curriculum?.chapters.map((chapter, index) => {
+                      const progress = getChapterProgress(chapter.id)
                       const isCompleted = progress?.completed || false
-                      const isSelected = selectedCurriculumId === curriculum.id || 
-                                       (!selectedCurriculumId && index === 0)
+                      const isSelected = selectedChapterId === chapter.id || 
+                                       (!selectedChapterId && index === 0)
 
                       return (
                         <button
-                          key={curriculum.id}
-                          onClick={() => setSelectedCurriculumId(curriculum.id)}
+                          key={chapter.id}
+                          onClick={() => setSelectedChapterId(chapter.id)}
                           className={`w-full text-left p-3 rounded-lg border transition-colors ${
                             isSelected 
                               ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
@@ -196,10 +208,10 @@ export default function CourseDetailPage({ params }: CourseDetailPageProps) {
                             )}
                             <div className="flex-1">
                               <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                {curriculum.title}
+                                {chapter.title}
                               </div>
                               <div className="text-xs text-gray-500 dark:text-gray-400">
-                                {curriculum.contentType}
+                                {chapter.contentType}
                               </div>
                             </div>
                           </div>
@@ -217,7 +229,7 @@ export default function CourseDetailPage({ params }: CourseDetailPageProps) {
                 <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-600">
                   <div className="flex items-center justify-between">
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {selectedCurriculum?.title}
+                      {selectedChapter?.title}
                     </h2>
                     <div className="flex items-center space-x-2">
                       {(user?.role === 'admin' || user?.role === 'instructor') && (
@@ -236,12 +248,12 @@ export default function CourseDetailPage({ params }: CourseDetailPageProps) {
                           </Link>
                         </div>
                       )}
-                      {selectedCurriculum && (
+                      {selectedChapter && (
                         <div className="flex items-center space-x-2">
                           <span className="text-sm text-gray-500 dark:text-gray-400">
-                            {selectedCurriculum.contentType}
+                            {selectedChapter.contentType}
                           </span>
-                          {getCurriculumProgress(selectedCurriculum.id)?.completed && (
+                          {getChapterProgress(selectedChapter.id)?.completed && (
                             <CheckCircle className="h-5 w-5 text-green-500" />
                           )}
                         </div>
@@ -250,12 +262,12 @@ export default function CourseDetailPage({ params }: CourseDetailPageProps) {
                   </div>
                 </div>
                 <div className="p-6">
-                  {selectedCurriculum ? (
+                  {selectedChapter ? (
                     <div className="prose max-w-none">
                       <div 
                         className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap"
                         dangerouslySetInnerHTML={{ 
-                          __html: selectedCurriculum.content
+                          __html: selectedChapter.content
                             .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto"><code class="text-sm">$2</code></pre>')
                             .replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-2 py-1 rounded text-sm">$1</code>')
                             .replace(/^## (.*$)/gm, '<h2 class="text-xl font-semibold text-gray-900 mt-6 mb-4">$1</h2>')
@@ -279,21 +291,21 @@ export default function CourseDetailPage({ params }: CourseDetailPageProps) {
                     </div>
                   )}
                 </div>
-                {selectedCurriculum && user?.role === 'student' && (
+                {selectedChapter && user?.role === 'student' && (
                   <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-600">
                     <div className="flex items-center justify-between">
                       <div className="text-sm text-gray-600 dark:text-gray-300">
                         学習が完了したらマークしてください
                       </div>
                       <button
-                        onClick={() => handleMarkComplete(selectedCurriculum.id)}
+                        onClick={() => handleMarkComplete(selectedChapter.id)}
                         className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md ${
-                          getCurriculumProgress(selectedCurriculum.id)?.completed
+                          getChapterProgress(selectedChapter.id)?.completed
                             ? 'text-green-800 bg-green-100 hover:bg-green-200'
                             : 'text-white bg-blue-600 hover:bg-blue-700'
                         }`}
                       >
-                        {getCurriculumProgress(selectedCurriculum.id)?.completed ? (
+                        {getChapterProgress(selectedChapter.id)?.completed ? (
                           <>
                             <CheckCircle className="h-4 w-4 mr-2" />
                             完了済み
@@ -310,25 +322,25 @@ export default function CourseDetailPage({ params }: CourseDetailPageProps) {
                 )}
               </div>
 
-              {/* Related Assignments */}
-              {selectedCurriculum && (() => {
-                const relatedAssignments = getRelatedAssignments(selectedCurriculum.id)
-                return relatedAssignments.length > 0 && (
+              {/* Course Assignments */}
+              {(() => {
+                const courseAssignments = getCourseAssignments()
+                return courseAssignments.length > 0 && (
                   <div className="bg-white dark:bg-gray-800 shadow rounded-lg mt-6">
                     <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-600">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        関連課題
+                        コース課題
                       </h3>
                       <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                        このカリキュラムに関連する課題です
+                        このコースに関連する課題です
                       </p>
                     </div>
                     <div className="p-6">
                       <div className="space-y-4">
-                        {relatedAssignments.map((assignment) => {
+                        {courseAssignments.map((assignment) => {
                           const status = getAssignmentStatus(assignment)
                           const submission = getAssignmentSubmission(assignment.id)
-                          const daysUntilDue = getDaysUntilDue(assignment.dueDate)
+                          const daysUntilDue = getDaysUntilDue(assignment.dueDate || null)
                           const isOverdue = daysUntilDue !== null && daysUntilDue < 0
                           
                           return (

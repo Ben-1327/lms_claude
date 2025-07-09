@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Layout from '@/components/Layout'
-import { mockCourses, mockEnrollments, mockProgress, mockAssignments, mockSubmissions, mockCurriculumEnrollments, mockCurricula } from '@/lib/mockData'
+import { mockCourses, mockEnrollments, mockProgress, mockAssignments, mockSubmissions, mockCurricula, mockChapterProgress } from '@/lib/mockData'
 import { 
   BookOpen, 
   Users, 
@@ -51,7 +51,7 @@ export default function DashboardPage() {
   )
   const userProgress = mockProgress.filter(p => p.userId === user?.id)
   const userSubmissions = mockSubmissions.filter(s => s.userId === user?.id)
-  const userCurriculumEnrollments = mockCurriculumEnrollments.filter(ce => ce.userId === user?.id)
+  const userChapterProgress = mockChapterProgress.filter(cp => cp.userId === user?.id)
 
   const stats = {
     totalCourses: user?.role === 'admin' ? mockCourses.length : userCourses.length,
@@ -70,8 +70,8 @@ export default function DashboardPage() {
     recentActivity: userProgress.filter(p => p.completedAt && 
       new Date(p.completedAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000
     ).length,
-    activeCurriculums: userCurriculumEnrollments.filter(ce => ce.status === 'active').length,
-    completedCurriculums: userCurriculumEnrollments.filter(ce => ce.status === 'completed').length
+    completedChapters: userChapterProgress.filter(cp => cp.completed).length,
+    totalChapters: userChapterProgress.length
   }
 
   const getProgressData = () => {
@@ -163,7 +163,7 @@ export default function DashboardPage() {
                     {user?.role === 'admin' ? (
                       `進行中: ${stats.activeCourses}`
                     ) : (
-                      `進行中: ${stats.activeCourses} / カリキュラム: ${stats.activeCurriculums}`
+                      `進行中: ${stats.activeCourses} / 完了章: ${stats.completedChapters}`
                     )}
                   </div>
                 </div>
@@ -353,13 +353,13 @@ export default function DashboardPage() {
             <div className="p-6">
               <div className="space-y-4">
                 {userProgress.filter(p => p.completedAt).slice(0, 5).map((progress) => (
-                  <div key={progress.curriculumId} className="flex items-center space-x-4">
+                  <div key={progress.chapterId} className="flex items-center space-x-4">
                     <div className="flex-shrink-0">
                       <CheckCircle className="h-5 w-5 text-green-500" />
                     </div>
                     <div className="flex-1">
                       <p className="text-sm text-gray-900 dark:text-white">
-                        カリキュラムを完了しました
+                        章を完了しました
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         {progress.completedAt ? new Date(progress.completedAt).toLocaleDateString('ja-JP') : ''}
@@ -379,66 +379,68 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Active Curriculum Enrollments */}
-          {user?.role === 'student' && userCurriculumEnrollments.length > 0 && (
+          {/* Chapter Progress Summary */}
+          {user?.role === 'student' && userChapterProgress.length > 0 && (
             <div className="bg-white dark:bg-gray-800 shadow rounded-lg mb-8">
               <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-600">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  受講中のカリキュラム
+                  章別学習進捗
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  同時に複数のカリキュラムを受講できます
+                  各章の学習状況をご確認ください
                 </p>
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {userCurriculumEnrollments.map((enrollment) => {
-                    const curriculum = mockCurricula.find(c => c.id === enrollment.curriculumId)
+                  {userChapterProgress.slice(0, 6).map((chapterProgress) => {
+                    const curriculum = mockCurricula.find(c => 
+                      c.chapters.some(ch => ch.id === chapterProgress.chapterId)
+                    )
+                    const chapter = curriculum?.chapters.find(ch => ch.id === chapterProgress.chapterId)
                     const course = curriculum ? mockCourses.find(c => c.id === curriculum.courseId) : null
                     
-                    if (!curriculum || !course) return null
+                    if (!chapter || !course) return null
                     
                     return (
-                      <div key={enrollment.id} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 hover:border-blue-300 dark:hover:border-blue-500 transition-colors">
+                      <div key={chapterProgress.id} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 hover:border-blue-300 dark:hover:border-blue-500 transition-colors">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
                             <h4 className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2">
-                              {curriculum.title}
+                              {chapter.title}
                             </h4>
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                               {course.title}
                             </p>
                           </div>
                           <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            enrollment.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200' :
-                            enrollment.status === 'completed' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200' :
-                            'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-300'
+                            chapterProgress.completed ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200' :
+                            'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200'
                           }`}>
-                            {enrollment.status === 'active' ? '受講中' : 
-                             enrollment.status === 'completed' ? '完了' : '中断'}
+                            {chapterProgress.completed ? '完了' : '学習中'}
                           </span>
                         </div>
                         
                         <div className="mb-3">
                           <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-                            <span>進捗</span>
-                            <span>{enrollment.progress}%</span>
+                            <span>学習時間</span>
+                            <span>{chapterProgress.timeSpent || 0}分</span>
                           </div>
                           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                             <div 
                               className={`h-2 rounded-full transition-all duration-300 ${
-                                enrollment.status === 'completed' ? 'bg-blue-600' : 'bg-green-600'
+                                chapterProgress.completed ? 'bg-green-600' : 'bg-yellow-600'
                               }`}
-                              style={{ width: `${enrollment.progress}%` }}
+                              style={{ width: chapterProgress.completed ? '100%' : '60%' }}
                             />
                           </div>
                         </div>
                         
                         <div className="flex items-center justify-between">
                           <div className="text-xs text-gray-500 dark:text-gray-400">
-                            開始: {new Date(enrollment.startDate).toLocaleDateString('ja-JP')}
-                            {enrollment.endDate && (
-                              <div>完了: {new Date(enrollment.endDate).toLocaleDateString('ja-JP')}</div>
+                            {chapterProgress.completedAt ? (
+                              `完了: ${new Date(chapterProgress.completedAt).toLocaleDateString('ja-JP')}`
+                            ) : (
+                              '学習中'
                             )}
                           </div>
                           <Link
@@ -453,18 +455,18 @@ export default function DashboardPage() {
                   })}
                 </div>
                 
-                {userCurriculumEnrollments.filter(e => e.status === 'active').length > 1 && (
-                  <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-900/50 rounded-lg">
+                {userChapterProgress.filter(cp => !cp.completed).length > 0 && (
+                  <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/50 rounded-lg">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
-                        <BookOpen className="h-5 w-5 text-blue-600" />
+                        <BookOpen className="h-5 w-5 text-yellow-600" />
                       </div>
                       <div className="ml-3">
-                        <p className="text-sm text-blue-800 dark:text-blue-200">
-                          現在{userCurriculumEnrollments.filter(e => e.status === 'active').length}つのカリキュラムを同時受講中です
+                        <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                          {userChapterProgress.filter(cp => !cp.completed).length}章が未完了です
                         </p>
-                        <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">
-                          効率的な学習スケジュールを立てて進めましょう
+                        <p className="text-xs text-yellow-600 dark:text-yellow-300 mt-1">
+                          継続的な学習を心がけましょう
                         </p>
                       </div>
                     </div>

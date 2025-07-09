@@ -1,4 +1,4 @@
-import { Course, Curriculum, Enrollment, Progress, Assignment, Submission, CurriculumEnrollment } from '@/types'
+import { Course, Curriculum, Chapter, Enrollment, Progress, Assignment, Submission, ChapterProgress } from '@/types'
 
 export const mockCourses: Course[] = [
   {
@@ -48,9 +48,17 @@ export const mockCurricula: Curriculum[] = [
   {
     id: '1',
     courseId: '1',
-    title: '第1章: Pythonの基本',
-    contentType: 'text',
-    content: `# Pythonの基本
+    title: 'Python基礎プログラミング カリキュラム',
+    description: 'Pythonの基本文法から始めて、データ構造、関数、クラスまでを学習します。',
+    createdAt: new Date('2024-01-20'),
+    updatedAt: new Date('2024-01-20'),
+    chapters: [
+      {
+        id: '1',
+        curriculumId: '1',
+        title: '第1章: Pythonの基本',
+        contentType: 'text',
+        content: `# Pythonの基本
 
 ## 1.1 Pythonとは
 Pythonは、シンプルで読みやすいプログラミング言語です。
@@ -68,14 +76,14 @@ print("Hello, World!")
 ## 演習
 1. Pythonをインストールしてください
 2. Hello Worldプログラムを実行してください`,
-    orderIndex: 1
-  },
-  {
-    id: '2',
-    courseId: '1',
-    title: '第2章: 変数とデータ型',
-    contentType: 'text',
-    content: `# 変数とデータ型
+        orderIndex: 1
+      },
+      {
+        id: '2',
+        curriculumId: '1',
+        title: '第2章: 変数とデータ型',
+        contentType: 'text',
+        content: `# 変数とデータ型
 
 ## 2.1 変数の宣言
 \`\`\`python
@@ -101,14 +109,14 @@ print(int_num + 100)  # 223
 ## 演習
 1. 自分の名前、年齢、身長を変数に格納してください
 2. 型変換を使って計算してください`,
-    orderIndex: 2
-  },
-  {
-    id: '3',
-    courseId: '1',
-    title: '第3章: 条件分岐',
-    contentType: 'text',
-    content: `# 条件分岐
+        orderIndex: 2
+      },
+      {
+        id: '3',
+        curriculumId: '1',
+        title: '第3章: 条件分岐',
+        contentType: 'text',
+        content: `# 条件分岐
 
 ## 3.1 if文の基本
 \`\`\`python
@@ -133,16 +141,26 @@ else:
 ## 演習
 1. 年齢を入力して、成人かどうかを判定するプログラムを作成してください
 2. 点数に応じて成績を表示するプログラムを作成してください`,
-    orderIndex: 3
+        orderIndex: 3
+      }
+    ]
   },
 
   // Web開発入門のカリキュラム
   {
-    id: '4',
+    id: '2',
     courseId: '2',
-    title: '第1章: HTMLの基本',
-    contentType: 'text',
-    content: `# HTMLの基本
+    title: 'Web開発入門 カリキュラム',
+    description: 'HTML、CSS、JavaScriptを使って基本的なWebページを作成します。',
+    createdAt: new Date('2024-01-25'),
+    updatedAt: new Date('2024-01-25'),
+    chapters: [
+      {
+        id: '4',
+        curriculumId: '2',
+        title: '第1章: HTMLの基本',
+        contentType: 'text',
+        content: `# HTMLの基本
 
 ## 1.1 HTMLとは
 HyperText Markup Languageの略で、Webページの構造を記述するための言語です。
@@ -173,14 +191,14 @@ HyperText Markup Languageの略で、Webページの構造を記述するため�
 ## 演習
 1. 自己紹介ページを作成してください
 2. 画像とリンクを含むページを作成してください`,
-    orderIndex: 1
-  },
-  {
-    id: '5',
-    courseId: '2',
-    title: '第2章: CSSの基本',
-    contentType: 'text',
-    content: `# CSSの基本
+        orderIndex: 1
+      },
+      {
+        id: '5',
+        curriculumId: '2',
+        title: '第2章: CSSの基本',
+        contentType: 'text',
+        content: `# CSSの基本
 
 ## 2.1 CSSとは
 Cascading Style Sheetsの略で、HTMLの見た目を装飾するための言語です。
@@ -213,16 +231,26 @@ h1 {
 ## 演習
 1. HTMLページにCSSを適用してください
 2. レスポンシブデザインを実装してください`,
-    orderIndex: 2
+        orderIndex: 2
+      }
+    ]
   },
 
   // React入門のカリキュラム
   {
-    id: '6',
+    id: '3',
     courseId: '3',
-    title: '第1章: Reactの基本概念',
-    contentType: 'text',
-    content: `# Reactの基本概念
+    title: 'React入門 カリキュラム',
+    description: 'モダンなWebアプリケーション開発のためのReactライブラリを学習します。',
+    createdAt: new Date('2024-02-01'),
+    updatedAt: new Date('2024-02-01'),
+    chapters: [
+      {
+        id: '6',
+        curriculumId: '3',
+        title: '第1章: Reactの基本概念',
+        contentType: 'text',
+        content: `# Reactの基本概念
 
 ## 1.1 Reactとは
 UIを構築するためのJavaScriptライブラリです。
@@ -246,7 +274,9 @@ JavaScriptの中でHTML的な記述ができる構文です。
 ## 演習
 1. 簡単なコンポーネントを作成してください
 2. propsを使ってデータを渡してください`,
-    orderIndex: 1
+        orderIndex: 1
+      }
+    ]
   }
 ]
 
@@ -295,21 +325,21 @@ export const mockEnrollments: Enrollment[] = [
 ]
 
 export const mockProgress: Progress[] = [
-  { userId: '3', curriculumId: '1', completed: true, completedAt: new Date('2024-02-05') },
-  { userId: '3', curriculumId: '2', completed: true, completedAt: new Date('2024-02-10') },
-  { userId: '3', curriculumId: '3', completed: false },
-  { userId: '3', curriculumId: '4', completed: true, completedAt: new Date('2024-02-01') },
-  { userId: '3', curriculumId: '5', completed: true, completedAt: new Date('2024-02-15') },
-  { userId: '4', curriculumId: '1', completed: true, completedAt: new Date('2024-02-12') },
-  { userId: '4', curriculumId: '2', completed: false },
-  { userId: '4', curriculumId: '6', completed: true, completedAt: new Date('2024-02-16') },
-  { userId: '5', curriculumId: '1', completed: true, completedAt: new Date('2024-02-16') }
+  { userId: '3', chapterId: '1', completed: true, completedAt: new Date('2024-02-05') },
+  { userId: '3', chapterId: '2', completed: true, completedAt: new Date('2024-02-10') },
+  { userId: '3', chapterId: '3', completed: false },
+  { userId: '3', chapterId: '4', completed: true, completedAt: new Date('2024-02-01') },
+  { userId: '3', chapterId: '5', completed: true, completedAt: new Date('2024-02-15') },
+  { userId: '4', chapterId: '1', completed: true, completedAt: new Date('2024-02-12') },
+  { userId: '4', chapterId: '2', completed: false },
+  { userId: '4', chapterId: '6', completed: true, completedAt: new Date('2024-02-16') },
+  { userId: '5', chapterId: '1', completed: true, completedAt: new Date('2024-02-16') }
 ]
 
 export const mockAssignments: Assignment[] = [
   {
     id: '1',
-    curriculumIds: ['1', '2'],
+    courseId: '1',
     title: 'Python基礎課題1',
     description: '変数とデータ型を使用した簡単なプログラムを作成してください。\n\n**要件:**\n- 自分の名前、年齢、身長を変数に格納\n- 型変換を使って計算を行う\n- 結果を出力する',
     dueDate: new Date('2024-02-20'),
@@ -321,7 +351,7 @@ export const mockAssignments: Assignment[] = [
   },
   {
     id: '2',
-    curriculumIds: ['3'],
+    courseId: '1',
     title: 'Python基礎課題2',
     description: '条件分岐を使用したプログラムを作成してください。\n\n**要件:**\n- ユーザーから点数を入力\n- 点数に応じて成績を表示\n- エラーハンドリングを含める',
     dueDate: new Date('2024-02-25'),
@@ -333,7 +363,7 @@ export const mockAssignments: Assignment[] = [
   },
   {
     id: '3',
-    curriculumIds: ['4', '5'],
+    courseId: '2',
     title: 'HTML基礎課題',
     description: '基本的なHTMLページを作成してください。\n\n**要件:**\n- 自己紹介ページ\n- 画像とリンクを含める\n- 適切なセマンティックタグを使用',
     dueDate: new Date('2024-02-28'),
@@ -345,7 +375,7 @@ export const mockAssignments: Assignment[] = [
   },
   {
     id: '4',
-    curriculumIds: ['6'],
+    courseId: '3',
     title: 'React基礎課題',
     description: 'Reactコンポーネントを作成してください。\n\n**要件:**\n- 関数コンポーネントを使用\n- propsを活用\n- 適切なJSXを記述',
     dueDate: new Date('2024-03-05'),
@@ -354,6 +384,18 @@ export const mockAssignments: Assignment[] = [
     type: 'project',
     isRequired: false,
     orderIndex: 1
+  },
+  {
+    id: '5',
+    courseId: '1',
+    title: 'Python総合課題',
+    description: 'Pythonの基礎知識を総合的に活用した課題です。\n\n**要件:**\n- 複数の機能を含むプログラム\n- オブジェクト指向プログラミングを使用\n- エラーハンドリングを含める',
+    dueDate: new Date('2024-03-01'),
+    maxScore: 150,
+    createdAt: new Date('2024-02-15'),
+    type: 'project',
+    isRequired: true,
+    orderIndex: 3
   }
 ]
 
@@ -443,75 +485,51 @@ print("身長:", height)
   }
 ]
 
-export const mockCurriculumEnrollments: CurriculumEnrollment[] = [
+export const mockChapterProgress: ChapterProgress[] = [
   {
     id: '1',
     userId: '3',
-    curriculumId: '1',
-    enrollmentId: '1',
-    status: 'completed',
-    startDate: new Date('2024-02-01'),
-    endDate: new Date('2024-02-05'),
-    progress: 100,
-    assignedBy: '2',
-    assignedAt: new Date('2024-02-01')
+    chapterId: '1',
+    completed: true,
+    completedAt: new Date('2024-02-05'),
+    timeSpent: 120
   },
   {
     id: '2',
     userId: '3',
-    curriculumId: '2',
-    enrollmentId: '1',
-    status: 'completed',
-    startDate: new Date('2024-02-05'),
-    endDate: new Date('2024-02-10'),
-    progress: 100,
-    assignedBy: '2',
-    assignedAt: new Date('2024-02-01')
+    chapterId: '2',
+    completed: true,
+    completedAt: new Date('2024-02-10'),
+    timeSpent: 90
   },
   {
     id: '3',
     userId: '3',
-    curriculumId: '3',
-    enrollmentId: '1',
-    status: 'active',
-    startDate: new Date('2024-02-10'),
-    progress: 50,
-    assignedBy: '2',
-    assignedAt: new Date('2024-02-01')
+    chapterId: '3',
+    completed: false,
+    timeSpent: 45
   },
   {
     id: '4',
     userId: '4',
-    curriculumId: '1',
-    enrollmentId: '3',
-    status: 'completed',
-    startDate: new Date('2024-02-10'),
-    endDate: new Date('2024-02-12'),
-    progress: 100,
-    assignedBy: '2',
-    assignedAt: new Date('2024-02-10')
+    chapterId: '1',
+    completed: true,
+    completedAt: new Date('2024-02-12'),
+    timeSpent: 150
   },
   {
     id: '5',
     userId: '4',
-    curriculumId: '2',
-    enrollmentId: '3',
-    status: 'active',
-    startDate: new Date('2024-02-12'),
-    progress: 0,
-    assignedBy: '2',
-    assignedAt: new Date('2024-02-10')
+    chapterId: '2',
+    completed: false,
+    timeSpent: 30
   },
   {
     id: '6',
-    userId: '4',
-    curriculumId: '6',
-    enrollmentId: '4',
-    status: 'completed',
-    startDate: new Date('2024-02-15'),
-    endDate: new Date('2024-02-16'),
-    progress: 100,
-    assignedBy: '2',
-    assignedAt: new Date('2024-02-15')
+    userId: '5',
+    chapterId: '1',
+    completed: true,
+    completedAt: new Date('2024-02-16'),
+    timeSpent: 100
   }
 ]

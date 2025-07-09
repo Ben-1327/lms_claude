@@ -31,9 +31,9 @@ export class ProgressManager {
     localStorage.setItem(this.getStorageKey(userId), JSON.stringify(progress))
   }
 
-  static markAsCompleted(userId: string, curriculumId: string): void {
+  static markAsCompleted(userId: string, chapterId: string): void {
     const currentProgress = this.getProgress(userId)
-    const existingIndex = currentProgress.findIndex(p => p.curriculumId === curriculumId)
+    const existingIndex = currentProgress.findIndex(p => p.chapterId === chapterId)
     
     if (existingIndex >= 0) {
       currentProgress[existingIndex] = {
@@ -44,7 +44,7 @@ export class ProgressManager {
     } else {
       currentProgress.push({
         userId,
-        curriculumId,
+        chapterId,
         completed: true,
         completedAt: new Date()
       })
@@ -53,9 +53,9 @@ export class ProgressManager {
     this.setProgress(userId, currentProgress)
   }
 
-  static markAsIncomplete(userId: string, curriculumId: string): void {
+  static markAsIncomplete(userId: string, chapterId: string): void {
     const currentProgress = this.getProgress(userId)
-    const existingIndex = currentProgress.findIndex(p => p.curriculumId === curriculumId)
+    const existingIndex = currentProgress.findIndex(p => p.chapterId === chapterId)
     
     if (existingIndex >= 0) {
       currentProgress[existingIndex] = {
@@ -66,7 +66,7 @@ export class ProgressManager {
     } else {
       currentProgress.push({
         userId,
-        curriculumId,
+        chapterId,
         completed: false
       })
     }
@@ -74,20 +74,20 @@ export class ProgressManager {
     this.setProgress(userId, currentProgress)
   }
 
-  static getCurriculumProgress(userId: string, curriculumId: string): Progress | undefined {
+  static getChapterProgress(userId: string, chapterId: string): Progress | undefined {
     const progress = this.getProgress(userId)
-    return progress.find(p => p.curriculumId === curriculumId)
+    return progress.find(p => p.chapterId === chapterId)
   }
 
-  static calculateCourseProgress(userId: string, curriculumIds: string[]): number {
-    if (curriculumIds.length === 0) return 0
+  static calculateCourseProgress(userId: string, chapterIds: string[]): number {
+    if (chapterIds.length === 0) return 0
     
     const progress = this.getProgress(userId)
-    const completedCount = curriculumIds.filter(id => {
-      const curricProgress = progress.find(p => p.curriculumId === id)
-      return curricProgress?.completed || false
+    const completedCount = chapterIds.filter(id => {
+      const chapterProgress = progress.find(p => p.chapterId === id)
+      return chapterProgress?.completed || false
     }).length
     
-    return Math.round((completedCount / curriculumIds.length) * 100)
+    return Math.round((completedCount / chapterIds.length) * 100)
   }
 }

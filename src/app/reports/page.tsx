@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import Layout from '@/components/Layout'
-import { mockCourses, mockEnrollments, mockProgress } from '@/lib/mockData'
+import { mockCourses, mockEnrollments, mockProgress, mockCurricula } from '@/lib/mockData'
 import { mockUsers } from '@/lib/auth'
 import { BarChart3, Users, BookOpen, TrendingUp, Award, Clock } from 'lucide-react'
 
@@ -209,7 +209,12 @@ export default function ReportsPage() {
                 <div className="space-y-4">
                   {recentProgress.map((progress, index) => {
                     const user = mockUsers.find(u => u.id === progress.userId)
-                    const curriculum = mockCourses.find(c => c.id === progress.curriculumId) // 本来はカリキュラム情報
+                    // 章からコースを取得
+                    const curriculum = mockCurricula.find(c => 
+                      c.chapters.some(ch => ch.id === progress.chapterId)
+                    )
+                    const course = curriculum ? mockCourses.find(c => c.id === curriculum.courseId) : null
+                    const chapter = curriculum?.chapters.find(ch => ch.id === progress.chapterId)
                     
                     return (
                       <div key={index} className="flex items-center space-x-3">
@@ -223,7 +228,7 @@ export default function ReportsPage() {
                             {user?.name}
                           </p>
                           <p className="text-sm text-gray-500">
-                            カリキュラムを完了しました
+                            {course?.title} - {chapter?.title} を完了しました
                           </p>
                         </div>
                         <div className="flex-shrink-0 text-sm text-gray-500">
