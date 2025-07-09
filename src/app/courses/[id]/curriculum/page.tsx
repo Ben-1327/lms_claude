@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Layout from '@/components/Layout'
 import { mockCourses, mockCurricula } from '@/lib/mockData'
-import { ArrowLeft, Plus, Edit, Trash2, MoveUp, MoveDown, Save } from 'lucide-react'
+import { ArrowLeft, Plus, Edit, Trash2, Save, GripVertical, Eye, Copy, FileText, Film, Presentation } from 'lucide-react'
 import Link from 'next/link'
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 
 interface CurriculumManagePageProps {
   params: { id: string }
@@ -19,8 +20,11 @@ export default function CurriculumManagePage({ params }: CurriculumManagePagePro
   const [isEditing, setIsEditing] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({
     title: '',
-    contentType: 'text' as 'text' | 'pdf' | 'slide',
-    content: ''
+    contentType: 'text' as 'text' | 'pdf' | 'slide' | 'video' | 'quiz' | 'assignment',
+    content: '',
+    estimatedDuration: 0,
+    difficulty: 'beginner' as 'beginner' | 'intermediate' | 'advanced',
+    objectives: [] as string[]
   })
   const [isCreating, setIsCreating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -81,20 +85,20 @@ export default function CurriculumManagePage({ params }: CurriculumManagePagePro
     setEditForm({
       title: curriculum.title,
       contentType: curriculum.contentType,
-      content: curriculum.content
+      content: curriculum.content,
+      estimatedDuration: curriculum.estimatedDuration || 0,
+      difficulty: curriculum.difficulty || 'beginner',
+      objectives: curriculum.objectives || []
     })
   }
 
   const handleSave = async (curriculumId: string) => {
     setIsSaving(true)
     try {
-      // TODO: API呼び出し
       console.log('Updating curriculum:', curriculumId, editForm)
       
-      // モック処理
       await new Promise(resolve => setTimeout(resolve, 500))
       
-      // ローカル状態を更新
       setCurricula(prev => prev.map(c => 
         c.id === curriculumId 
           ? { ...c, ...editForm }
@@ -115,34 +119,28 @@ export default function CurriculumManagePage({ params }: CurriculumManagePagePro
     }
 
     try {
-      // TODO: API呼び出し
       console.log('Deleting curriculum:', curriculumId)
       
-      // モック処理
       await new Promise(resolve => setTimeout(resolve, 500))
       
-      // ローカル状態を更新
       setCurricula(prev => prev.filter(c => c.id !== curriculumId))
     } catch (error) {
       console.error('Curriculum deletion failed:', error)
     }
   }
 
-  const handleMove = (curriculumId: string, direction: 'up' | 'down') => {
-    const currentIndex = curricula.findIndex(c => c.id === curriculumId)
-    if (
-      (direction === 'up' && currentIndex === 0) ||
-      (direction === 'down' && currentIndex === curricula.length - 1)
-    ) {
-      return
-    }
+  const handleOnDragEnd = (result: any) => {
+    if (!result.destination) return
 
-    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
+    const startIndex = result.source.index
+    const endIndex = result.destination.index
+
+    if (startIndex === endIndex) return
+
     const newCurricula = [...curricula]
-    const [moved] = newCurricula.splice(currentIndex, 1)
-    newCurricula.splice(newIndex, 0, moved)
+    const [moved] = newCurricula.splice(startIndex, 1)
+    newCurricula.splice(endIndex, 0, moved)
 
-    // 順序を更新
     const updatedCurricula = newCurricula.map((c, index) => ({
       ...c,
       orderIndex: index + 1
@@ -150,36 +148,88 @@ export default function CurriculumManagePage({ params }: CurriculumManagePagePro
 
     setCurricula(updatedCurricula)
     
-    // TODO: API呼び出しで順序を保存
-    console.log('Reordering curricula:', updatedCurricula.map(c => ({ id: c.id, orderIndex: c.orderIndex })))
+    console.log('Reordering curricula by drag:', updatedCurricula.map(c => ({ id: c.id, orderIndex: c.orderIndex })))
+  }
+
+  const handleDuplicate = (curriculum: any) => {
+    const newCurriculum = {
+      ...curriculum,
+      id: Date.now().toString(),
+      title: `${curriculum.title} (コピー)`,
+      orderIndex: curricula.length + 1
+    }
+    setCurricula(prev => [...prev, newCurriculum])
+    console.log('Duplicating curriculum:', newCurriculum)
+  }
+
+  const handlePreview = (curriculum: any) => {
+    console.log('Previewing curriculum:', curriculum)
   }
 
   const handleCreate = async () => {
     setIsSaving(true)
     try {
-      // TODO: API呼び出し
       const newCurriculum = {
         id: Date.now().toString(),
         courseId: params.id,
         title: editForm.title,
         contentType: editForm.contentType,
         content: editForm.content,
+        estimatedDuration: editForm.estimatedDuration,
+        difficulty: editForm.difficulty,
+        objectives: editForm.objectives,
         orderIndex: curricula.length + 1
       }
       
       console.log('Creating curriculum:', newCurriculum)
       
-      // モック処理
       await new Promise(resolve => setTimeout(resolve, 500))
       
-      // ローカル状態を更新
       setCurricula(prev => [...prev, newCurriculum])
       setIsCreating(false)
-      setEditForm({ title: '', contentType: 'text', content: '' })
+      setEditForm({ 
+        title: '', 
+        contentType: 'text', 
+        content: '', 
+        estimatedDuration: 0, 
+        difficulty: 'beginner', 
+        objectives: [] 
+      })
     } catch (error) {
       console.error('Curriculum creation failed:', error)
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const getContentTypeIcon = (contentType: string) => {
+    switch (contentType) {
+      case 'text': return <FileText className="h-4 w-4" />
+      case 'pdf': return <FileText className="h-4 w-4" />
+      case 'slide': return <Presentation className="h-4 w-4" />
+      case 'video': return <Film className="h-4 w-4" />
+      default: return <FileText className="h-4 w-4" />
+    }
+  }
+
+  const getContentTypeLabel = (contentType: string) => {
+    switch (contentType) {
+      case 'text': return 'テキスト'
+      case 'pdf': return 'PDF'
+      case 'slide': return 'スライド'
+      case 'video': return 'ビデオ'
+      case 'quiz': return 'クイズ'
+      case 'assignment': return '課題'
+      default: return contentType
+    }
+  }
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'beginner': return 'bg-green-100 text-green-800'
+      case 'intermediate': return 'bg-yellow-100 text-yellow-800'
+      case 'advanced': return 'bg-red-100 text-red-800'
+      default: return 'bg-gray-100 text-gray-800'
     }
   }
 
@@ -201,7 +251,7 @@ export default function CurriculumManagePage({ params }: CurriculumManagePagePro
                   カリキュラム編集: {course.title}
                 </h1>
                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                  カリキュラムの内容を編集・管理します
+                  ドラッグ&ドロップでカリキュラムの順序を変更できます
                 </p>
               </div>
               <button
@@ -234,19 +284,50 @@ export default function CurriculumManagePage({ params }: CurriculumManagePagePro
                       placeholder="カリキュラムのタイトルを入力"
                     />
                   </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        コンテンツタイプ
+                      </label>
+                      <select
+                        value={editForm.contentType}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, contentType: e.target.value as any }))}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      >
+                        <option value="text">テキスト/Markdown</option>
+                        <option value="pdf">PDF</option>
+                        <option value="slide">スライド</option>
+                        <option value="video">ビデオ</option>
+                        <option value="quiz">クイズ</option>
+                        <option value="assignment">課題</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        難易度
+                      </label>
+                      <select
+                        value={editForm.difficulty}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, difficulty: e.target.value as any }))}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      >
+                        <option value="beginner">初級</option>
+                        <option value="intermediate">中級</option>
+                        <option value="advanced">上級</option>
+                      </select>
+                    </div>
+                  </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      コンテンツタイプ
+                      推定所要時間（分）
                     </label>
-                    <select
-                      value={editForm.contentType}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, contentType: e.target.value as any }))}
+                    <input
+                      type="number"
+                      value={editForm.estimatedDuration}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, estimatedDuration: parseInt(e.target.value) || 0 }))}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    >
-                      <option value="text">テキスト/Markdown</option>
-                      <option value="pdf">PDF</option>
-                      <option value="slide">スライド</option>
-                    </select>
+                      placeholder="30"
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -280,124 +361,196 @@ export default function CurriculumManagePage({ params }: CurriculumManagePagePro
             )}
 
             {/* カリキュラム一覧 */}
-            {curricula.map((curriculum, index) => (
-              <div key={curriculum.id} className="bg-white dark:bg-gray-800 shadow rounded-lg">
-                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-600">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                        {index + 1}.
-                      </span>
-                      {isEditing === curriculum.id ? (
-                        <input
-                          type="text"
-                          value={editForm.title}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
-                          className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                        />
-                      ) : (
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                          {curriculum.title}
-                        </h3>
-                      )}
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-                        {curriculum.contentType}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleMove(curriculum.id, 'up')}
-                        disabled={index === 0}
-                        className="p-1 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <MoveUp className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleMove(curriculum.id, 'down')}
-                        disabled={index === curricula.length - 1}
-                        className="p-1 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <MoveDown className="h-4 w-4" />
-                      </button>
-                      {isEditing === curriculum.id ? (
-                        <button
-                          onClick={() => handleSave(curriculum.id)}
-                          disabled={isSaving}
-                          className="p-1 text-green-600 hover:text-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <Save className="h-4 w-4" />
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleEdit(curriculum)}
-                          className="p-1 text-blue-600 hover:text-blue-700"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDelete(curriculum.id)}
-                        className="p-1 text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
+            <DragDropContext onDragEnd={handleOnDragEnd}>
+              <Droppable droppableId="curricula">
+                {(provided) => (
+                  <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
+                    {curricula.map((curriculum, index) => (
+                      <Draggable key={curriculum.id} draggableId={curriculum.id} index={index}>
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            className={`bg-white dark:bg-gray-800 shadow rounded-lg transition-transform ${
+                              snapshot.isDragging ? 'shadow-lg scale-105' : ''
+                            }`}
+                          >
+                            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-3">
+                                  <div
+                                    {...provided.dragHandleProps}
+                                    className="cursor-move text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+                                  >
+                                    <GripVertical className="h-5 w-5" />
+                                  </div>
+                                  <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                    {index + 1}.
+                                  </span>
+                                  {isEditing === curriculum.id ? (
+                                    <input
+                                      type="text"
+                                      value={editForm.title}
+                                      onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
+                                      className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    />
+                                  ) : (
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                      {curriculum.title}
+                                    </h3>
+                                  )}
+                                  <div className="flex space-x-2">
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                                      <span className="mr-1">{getContentTypeIcon(curriculum.contentType)}</span>
+                                      {getContentTypeLabel(curriculum.contentType)}
+                                    </span>
+                                    {curriculum.difficulty && (
+                                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getDifficultyColor(curriculum.difficulty)}`}>
+                                        {curriculum.difficulty === 'beginner' ? '初級' : 
+                                         curriculum.difficulty === 'intermediate' ? '中級' : '上級'}
+                                      </span>
+                                    )}
+                                    {curriculum.estimatedDuration && (
+                                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                                        {curriculum.estimatedDuration}分
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <button
+                                    onClick={() => handlePreview(curriculum)}
+                                    className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                                    title="プレビュー"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDuplicate(curriculum)}
+                                    className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                                    title="複製"
+                                  >
+                                    <Copy className="h-4 w-4" />
+                                  </button>
+                                  {isEditing === curriculum.id ? (
+                                    <button
+                                      onClick={() => handleSave(curriculum.id)}
+                                      disabled={isSaving}
+                                      className="p-1 text-green-600 hover:text-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                      title="保存"
+                                    >
+                                      <Save className="h-4 w-4" />
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => handleEdit(curriculum)}
+                                      className="p-1 text-blue-600 hover:text-blue-700"
+                                      title="編集"
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={() => handleDelete(curriculum.id)}
+                                    className="p-1 text-red-600 hover:text-red-700"
+                                    title="削除"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="px-6 py-4">
+                              {isEditing === curriculum.id ? (
+                                <div className="space-y-4">
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        コンテンツタイプ
+                                      </label>
+                                      <select
+                                        value={editForm.contentType}
+                                        onChange={(e) => setEditForm(prev => ({ ...prev, contentType: e.target.value as any }))}
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                      >
+                                        <option value="text">テキスト/Markdown</option>
+                                        <option value="pdf">PDF</option>
+                                        <option value="slide">スライド</option>
+                                        <option value="video">ビデオ</option>
+                                        <option value="quiz">クイズ</option>
+                                        <option value="assignment">課題</option>
+                                      </select>
+                                    </div>
+                                    <div>
+                                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        難易度
+                                      </label>
+                                      <select
+                                        value={editForm.difficulty}
+                                        onChange={(e) => setEditForm(prev => ({ ...prev, difficulty: e.target.value as any }))}
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                      >
+                                        <option value="beginner">初級</option>
+                                        <option value="intermediate">中級</option>
+                                        <option value="advanced">上級</option>
+                                      </select>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                      推定所要時間（分）
+                                    </label>
+                                    <input
+                                      type="number"
+                                      value={editForm.estimatedDuration}
+                                      onChange={(e) => setEditForm(prev => ({ ...prev, estimatedDuration: parseInt(e.target.value) || 0 }))}
+                                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                      内容
+                                    </label>
+                                    <textarea
+                                      value={editForm.content}
+                                      onChange={(e) => setEditForm(prev => ({ ...prev, content: e.target.value }))}
+                                      rows={8}
+                                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    />
+                                  </div>
+                                  <div className="flex justify-end space-x-3">
+                                    <button
+                                      onClick={() => setIsEditing(null)}
+                                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
+                                    >
+                                      キャンセル
+                                    </button>
+                                    <button
+                                      onClick={() => handleSave(curriculum.id)}
+                                      disabled={isSaving}
+                                      className="px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                      {isSaving ? '保存中...' : '保存'}
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="prose max-w-none">
+                                  <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300">
+                                    {curriculum.content}
+                                  </pre>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
                   </div>
-                </div>
-                <div className="px-6 py-4">
-                  {isEditing === curriculum.id ? (
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          コンテンツタイプ
-                        </label>
-                        <select
-                          value={editForm.contentType}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, contentType: e.target.value as any }))}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                        >
-                          <option value="text">テキスト/Markdown</option>
-                          <option value="pdf">PDF</option>
-                          <option value="slide">スライド</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          内容
-                        </label>
-                        <textarea
-                          value={editForm.content}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, content: e.target.value }))}
-                          rows={8}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                        />
-                      </div>
-                      <div className="flex justify-end space-x-3">
-                        <button
-                          onClick={() => setIsEditing(null)}
-                          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
-                        >
-                          キャンセル
-                        </button>
-                        <button
-                          onClick={() => handleSave(curriculum.id)}
-                          disabled={isSaving}
-                          className="px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isSaving ? '保存中...' : '保存'}
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="prose max-w-none">
-                      <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300">
-                        {curriculum.content}
-                      </pre>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+                )}
+              </Droppable>
+            </DragDropContext>
 
             {curricula.length === 0 && (
               <div className="text-center py-12">

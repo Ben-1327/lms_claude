@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import Layout from '@/components/Layout'
 import { mockAssignments, mockSubmissions, mockCurricula } from '@/lib/mockData'
 import { mockUsers } from '@/lib/auth'
-import { FileText, Clock, CheckCircle, AlertCircle, Star } from 'lucide-react'
+import { FileText, Clock, CheckCircle, AlertCircle, Star, Plus } from 'lucide-react'
 import Link from 'next/link'
 
 export default function AssignmentsPage() {
@@ -215,10 +215,21 @@ export default function AssignmentsPage() {
       <div className="py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">課題レビュー</h1>
-            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-              受講者の課題提出をレビューできます
-            </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">課題レビュー</h1>
+                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                  受講者の課題提出をレビューできます
+                </p>
+              </div>
+              <Link
+                href="/assignments/create"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                新規課題作成
+              </Link>
+            </div>
           </div>
 
           {/* 統計情報 */}
