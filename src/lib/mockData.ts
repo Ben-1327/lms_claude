@@ -1,4 +1,4 @@
-import { Course, Curriculum, Enrollment, Progress, Assignment, Submission } from '@/types'
+import { Course, Curriculum, Enrollment, Progress, Assignment, Submission, CurriculumEnrollment } from '@/types'
 
 export const mockCourses: Course[] = [
   {
@@ -309,30 +309,51 @@ export const mockProgress: Progress[] = [
 export const mockAssignments: Assignment[] = [
   {
     id: '1',
-    curriculumId: '1',
+    curriculumIds: ['1', '2'],
     title: 'Python基礎課題1',
     description: '変数とデータ型を使用した簡単なプログラムを作成してください。\n\n**要件:**\n- 自分の名前、年齢、身長を変数に格納\n- 型変換を使って計算を行う\n- 結果を出力する',
     dueDate: new Date('2024-02-20'),
     maxScore: 100,
-    createdAt: new Date('2024-02-01')
+    createdAt: new Date('2024-02-01'),
+    type: 'essay',
+    isRequired: true,
+    orderIndex: 1
   },
   {
     id: '2',
-    curriculumId: '3',
+    curriculumIds: ['3'],
     title: 'Python基礎課題2',
     description: '条件分岐を使用したプログラムを作成してください。\n\n**要件:**\n- ユーザーから点数を入力\n- 点数に応じて成績を表示\n- エラーハンドリングを含める',
     dueDate: new Date('2024-02-25'),
     maxScore: 100,
-    createdAt: new Date('2024-02-05')
+    createdAt: new Date('2024-02-05'),
+    type: 'project',
+    isRequired: true,
+    orderIndex: 2
   },
   {
     id: '3',
-    curriculumId: '4',
+    curriculumIds: ['4', '5'],
     title: 'HTML基礎課題',
     description: '基本的なHTMLページを作成してください。\n\n**要件:**\n- 自己紹介ページ\n- 画像とリンクを含める\n- 適切なセマンティックタグを使用',
     dueDate: new Date('2024-02-28'),
     maxScore: 100,
-    createdAt: new Date('2024-02-10')
+    createdAt: new Date('2024-02-10'),
+    type: 'project',
+    isRequired: true,
+    orderIndex: 1
+  },
+  {
+    id: '4',
+    curriculumIds: ['6'],
+    title: 'React基礎課題',
+    description: 'Reactコンポーネントを作成してください。\n\n**要件:**\n- 関数コンポーネントを使用\n- propsを活用\n- 適切なJSXを記述',
+    dueDate: new Date('2024-03-05'),
+    maxScore: 100,
+    createdAt: new Date('2024-02-20'),
+    type: 'project',
+    isRequired: false,
+    orderIndex: 1
   }
 ]
 
@@ -364,7 +385,8 @@ print(f"BMI計算用身長: {height/100}m")
     feedback: 'とても良い解答です。型変換の使い方が適切で、コードも読みやすいです。BMIの計算例も追加されていて素晴らしいです。',
     submittedAt: new Date('2024-02-08'),
     reviewedAt: new Date('2024-02-09'),
-    reviewedBy: '2'
+    reviewedBy: '2',
+    attemptNumber: 1
   },
   {
     id: '2',
@@ -393,7 +415,8 @@ except Exception as e:
     print(f"予期しないエラーが発生しました: {e}")
 \`\`\``,
     status: 'submitted',
-    submittedAt: new Date('2024-02-15')
+    submittedAt: new Date('2024-02-15'),
+    attemptNumber: 1
   },
   {
     id: '3',
@@ -415,6 +438,80 @@ print("身長:", height)
     feedback: '基本的な要件は満たしていますが、型変換の使用例が少ないです。もう少し様々な型変換を試してみてください。',
     submittedAt: new Date('2024-02-12'),
     reviewedAt: new Date('2024-02-13'),
-    reviewedBy: '2'
+    reviewedBy: '2',
+    attemptNumber: 1
+  }
+]
+
+export const mockCurriculumEnrollments: CurriculumEnrollment[] = [
+  {
+    id: '1',
+    userId: '3',
+    curriculumId: '1',
+    enrollmentId: '1',
+    status: 'completed',
+    startDate: new Date('2024-02-01'),
+    endDate: new Date('2024-02-05'),
+    progress: 100,
+    assignedBy: '2',
+    assignedAt: new Date('2024-02-01')
+  },
+  {
+    id: '2',
+    userId: '3',
+    curriculumId: '2',
+    enrollmentId: '1',
+    status: 'completed',
+    startDate: new Date('2024-02-05'),
+    endDate: new Date('2024-02-10'),
+    progress: 100,
+    assignedBy: '2',
+    assignedAt: new Date('2024-02-01')
+  },
+  {
+    id: '3',
+    userId: '3',
+    curriculumId: '3',
+    enrollmentId: '1',
+    status: 'active',
+    startDate: new Date('2024-02-10'),
+    progress: 50,
+    assignedBy: '2',
+    assignedAt: new Date('2024-02-01')
+  },
+  {
+    id: '4',
+    userId: '4',
+    curriculumId: '1',
+    enrollmentId: '3',
+    status: 'completed',
+    startDate: new Date('2024-02-10'),
+    endDate: new Date('2024-02-12'),
+    progress: 100,
+    assignedBy: '2',
+    assignedAt: new Date('2024-02-10')
+  },
+  {
+    id: '5',
+    userId: '4',
+    curriculumId: '2',
+    enrollmentId: '3',
+    status: 'active',
+    startDate: new Date('2024-02-12'),
+    progress: 0,
+    assignedBy: '2',
+    assignedAt: new Date('2024-02-10')
+  },
+  {
+    id: '6',
+    userId: '4',
+    curriculumId: '6',
+    enrollmentId: '4',
+    status: 'completed',
+    startDate: new Date('2024-02-15'),
+    endDate: new Date('2024-02-16'),
+    progress: 100,
+    assignedBy: '2',
+    assignedAt: new Date('2024-02-15')
   }
 ]

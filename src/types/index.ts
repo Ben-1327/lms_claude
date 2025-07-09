@@ -65,6 +65,19 @@ export interface Enrollment {
   progress: number
 }
 
+export interface CurriculumEnrollment {
+  id: string
+  userId: string
+  curriculumId: string
+  enrollmentId: string
+  status: 'active' | 'completed' | 'dropped'
+  startDate: Date
+  endDate?: Date
+  progress: number
+  assignedBy?: string
+  assignedAt: Date
+}
+
 export interface Progress {
   userId: string
   curriculumId: string
@@ -74,7 +87,7 @@ export interface Progress {
 
 export interface Assignment {
   id: string
-  curriculumId: string
+  curriculumIds: string[]
   title: string
   description: string
   dueDate?: Date
@@ -85,6 +98,8 @@ export interface Assignment {
   resources?: AssignmentResource[]
   rubric?: AssignmentRubric[]
   settings?: AssignmentSettings
+  isRequired?: boolean
+  orderIndex?: number
 }
 
 export interface AssignmentResource {
