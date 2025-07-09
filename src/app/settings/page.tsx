@@ -40,8 +40,8 @@ export default function SettingsPage() {
       <div className="py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-gray-900">設定</h1>
-            <p className="mt-1 text-sm text-gray-600">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">設定</h1>
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
               アカウント設定と環境設定を管理します
             </p>
           </div>
@@ -49,7 +49,7 @@ export default function SettingsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Sidebar */}
             <div className="lg:col-span-1">
-              <div className="bg-white shadow rounded-lg">
+              <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
                 <div className="p-4">
                   <nav className="space-y-2">
                     {tabs.map((tab) => (
@@ -58,8 +58,8 @@ export default function SettingsPage() {
                         onClick={() => setActiveTab(tab.id)}
                         className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md ${
                           activeTab === tab.id
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'text-gray-600 hover:bg-gray-100'
+                            ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                         }`}
                       >
                         <tab.icon className="h-4 w-4 mr-3" />
@@ -98,13 +98,13 @@ function ProfileSettings({ user }: { user: any }) {
   }
 
   return (
-    <div className="bg-white shadow rounded-lg">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">プロフィール設定</h2>
+    <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
+      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">プロフィール設定</h2>
       </div>
       <form onSubmit={handleSubmit} className="p-6 space-y-6">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             名前
           </label>
           <input
@@ -112,12 +112,12 @@ function ProfileSettings({ user }: { user: any }) {
             id="name"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           />
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             メールアドレス
           </label>
           <div className="relative">
@@ -127,13 +127,13 @@ function ProfileSettings({ user }: { user: any }) {
               id="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             />
           </div>
         </div>
 
         <div>
-          <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             ロール
           </label>
           <input
@@ -141,9 +141,9 @@ function ProfileSettings({ user }: { user: any }) {
             id="role"
             value={formData.role}
             disabled
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
           />
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             ロールは管理者のみが変更できます
           </p>
         </div>
@@ -151,7 +151,7 @@ function ProfileSettings({ user }: { user: any }) {
         <div className="flex justify-end">
           <button
             type="submit"
-            className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+            className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700"
           >
             保存
           </button>
@@ -186,79 +186,79 @@ function NotificationSettings() {
   }
 
   return (
-    <div className="bg-white shadow rounded-lg">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">通知設定</h2>
+    <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
+      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">通知設定</h2>
       </div>
       <div className="p-6 space-y-6">
         <div>
-          <h3 className="text-md font-medium text-gray-900 mb-4">メール通知</h3>
+          <h3 className="text-md font-medium text-gray-900 dark:text-white mb-4">メール通知</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-700">コース登録時</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">コース登録時</span>
               <input
                 type="checkbox"
                 checked={notifications.email.enrollment}
                 onChange={(e) => handleNotificationChange('email', 'enrollment', e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
               />
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-700">コース完了時</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">コース完了時</span>
               <input
                 type="checkbox"
                 checked={notifications.email.completion}
                 onChange={(e) => handleNotificationChange('email', 'completion', e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
               />
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-700">学習リマインダー</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">学習リマインダー</span>
               <input
                 type="checkbox"
                 checked={notifications.email.reminders}
                 onChange={(e) => handleNotificationChange('email', 'reminders', e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
               />
             </div>
           </div>
         </div>
 
         <div>
-          <h3 className="text-md font-medium text-gray-900 mb-4">ブラウザ通知</h3>
+          <h3 className="text-md font-medium text-gray-900 dark:text-white mb-4">ブラウザ通知</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-700">コース登録時</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">コース登録時</span>
               <input
                 type="checkbox"
                 checked={notifications.browser.enrollment}
                 onChange={(e) => handleNotificationChange('browser', 'enrollment', e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
               />
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-700">コース完了時</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">コース完了時</span>
               <input
                 type="checkbox"
                 checked={notifications.browser.completion}
                 onChange={(e) => handleNotificationChange('browser', 'completion', e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
               />
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-700">学習リマインダー</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">学習リマインダー</span>
               <input
                 type="checkbox"
                 checked={notifications.browser.reminders}
                 onChange={(e) => handleNotificationChange('browser', 'reminders', e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
               />
             </div>
           </div>
         </div>
 
         <div className="flex justify-end">
-          <button className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+          <button className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700">
             保存
           </button>
         </div>
