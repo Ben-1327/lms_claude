@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Layout from '@/components/Layout'
-import { mockCourses, mockEnrollments, mockProgress, mockAssignments, mockSubmissions } from '@/lib/mockData'
+import { mockCourses, mockEnrollments, mockProgress, mockAssignments, mockSubmissions, mockCurriculumEnrollments, mockCurricula } from '@/lib/mockData'
 import { 
   BookOpen, 
   Users, 
@@ -51,6 +51,7 @@ export default function DashboardPage() {
   )
   const userProgress = mockProgress.filter(p => p.userId === user?.id)
   const userSubmissions = mockSubmissions.filter(s => s.userId === user?.id)
+  const userCurriculumEnrollments = mockCurriculumEnrollments.filter(ce => ce.userId === user?.id)
 
   const stats = {
     totalCourses: user?.role === 'admin' ? mockCourses.length : userCourses.length,
@@ -68,7 +69,9 @@ export default function DashboardPage() {
       : 0,
     recentActivity: userProgress.filter(p => p.completedAt && 
       new Date(p.completedAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000
-    ).length
+    ).length,
+    activeCurriculums: userCurriculumEnrollments.filter(ce => ce.status === 'active').length,
+    completedCurriculums: userCurriculumEnrollments.filter(ce => ce.status === 'completed').length
   }
 
   const getProgressData = () => {
@@ -157,7 +160,11 @@ export default function DashboardPage() {
                 </div>
                 <div className="mt-4">
                   <div className="text-sm text-gray-500 dark:text-gray-400">
-                    進行中: {stats.activeCourses}
+                    {user?.role === 'admin' ? (
+                      `進行中: ${stats.activeCourses}`
+                    ) : (
+                      `進行中: ${stats.activeCourses} / カリキュラム: ${stats.activeCurriculums}`
+                    )}
                   </div>
                 </div>
               </div>
@@ -371,6 +378,101 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+
+          {/* Active Curriculum Enrollments */}
+          {user?.role === 'student' && userCurriculumEnrollments.length > 0 && (
+            <div className="bg-white dark:bg-gray-800 shadow rounded-lg mb-8">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  受講中のカリキュラム
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  同時に複数のカリキュラムを受講できます
+                </p>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {userCurriculumEnrollments.map((enrollment) => {
+                    const curriculum = mockCurricula.find(c => c.id === enrollment.curriculumId)
+                    const course = curriculum ? mockCourses.find(c => c.id === curriculum.courseId) : null
+                    
+                    if (!curriculum || !course) return null
+                    
+                    return (
+                      <div key={enrollment.id} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 hover:border-blue-300 dark:hover:border-blue-500 transition-colors">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <h4 className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2">
+                              {curriculum.title}
+                            </h4>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              {course.title}
+                            </p>
+                          </div>
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            enrollment.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200' :
+                            enrollment.status === 'completed' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200' :
+                            'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-300'
+                          }`}>
+                            {enrollment.status === 'active' ? '受講中' : 
+                             enrollment.status === 'completed' ? '完了' : '中断'}
+                          </span>
+                        </div>
+                        
+                        <div className="mb-3">
+                          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+                            <span>進捗</span>
+                            <span>{enrollment.progress}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div 
+                              className={`h-2 rounded-full transition-all duration-300 ${
+                                enrollment.status === 'completed' ? 'bg-blue-600' : 'bg-green-600'
+                              }`}
+                              style={{ width: `${enrollment.progress}%` }}
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            開始: {new Date(enrollment.startDate).toLocaleDateString('ja-JP')}
+                            {enrollment.endDate && (
+                              <div>完了: {new Date(enrollment.endDate).toLocaleDateString('ja-JP')}</div>
+                            )}
+                          </div>
+                          <Link
+                            href={`/courses/${course.id}`}
+                            className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+                          >
+                            詳細 →
+                          </Link>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+                
+                {userCurriculumEnrollments.filter(e => e.status === 'active').length > 1 && (
+                  <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-900/50 rounded-lg">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0">
+                        <BookOpen className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm text-blue-800 dark:text-blue-200">
+                          現在{userCurriculumEnrollments.filter(e => e.status === 'active').length}つのカリキュラムを同時受講中です
+                        </p>
+                        <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">
+                          効率的な学習スケジュールを立てて進めましょう
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Course Progress */}
           <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
